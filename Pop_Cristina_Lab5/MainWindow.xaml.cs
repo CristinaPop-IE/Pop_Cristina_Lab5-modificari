@@ -65,6 +65,7 @@ namespace Pop_Cristina_Lab5
             cmbInventory.ItemsSource = ctx.Inventories.Local;
             cmbInventory.DisplayMemberPath = "Make";
             cmbInventory.SelectedValuePath = "CarId";
+            BindDataGrid();
 
         }
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -258,10 +259,10 @@ namespace Pop_Cristina_Lab5
                     Customer customer = (Customer)cmbCustomers.SelectedItem;
                     Inventory inventory = (Inventory)cmbInventory.SelectedItem;
                     //instantiem Order entity 
-                    order = new Order();
+                    order = new Order()
                     {
-                        CustId = customer.CustId;
-                        CarId = inventory.CarId;
+                        CustId = customer.CustId,
+                        CarId = inventory.CarId
                     };
                     //adaugam entitatea nou creata in context 
                     ctx.Orders.Add(order); //salvam modificarile 
@@ -272,55 +273,76 @@ namespace Pop_Cristina_Lab5
                 {
                     MessageBox.Show(ex.Message);
                 }
-
-                else 
-                if (action == ActionState.Edit)
-                    {
-                        dynamic selectedOrder = ordersDataGrid.SelectedItem;
-                        try
-                        {
-                            int curr_id = selectedOrder.OrderId;
-                            var editedOrder = ctx.Orders.FirstOrDefault(s => s.OrderId == curr_id);
-                            if (editedOrder != null)
-                            {
-                            editedOrder.CustId = Int32.Parse(cmbCustomers.SelectedValue.ToString());
-                            editedOrder.CarId = Convert.ToInt32(cmbInventory.SelectedValue.ToString());
-                                //salvam modificarile 
-                                ctx.SaveChanges();
-                            }
-                        }
-                        catch (DataException ex)
-                        {
-                            MessageBox.Show(ex.Message);
-                        }
-                        BindDataGrid();
-                        // pozitionarea pe item-ul curent 
-                        customerViewSource.View.MoveCurrentTo(selectedOrder);
-                    }
-                
-                else if (action == ActionState.Delete)
-                {
-                    try
-                    {
-                        dynamic selectedOrder = ordersDataGrid.SelectedItem;
-                        int curr_id = selectedOrder.OrderId;
-                        var deletedOrder = ctx.Orders.FirstOrDefault(s => s.OrderId == curr_id);
-                        if (deletedOrder != null)
-                        {
-                            ctx.Orders.Remove(deletedOrder);
-                            ctx.SaveChanges();
-                            MessageBox.Show("Order Deleted Successfully", "Message");
-                            BindDataGrid();
-                        }
-                    }
-                    catch (DataException ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
-                }
             }
 
+            else
+                if (action == ActionState.Edit)
+            {
+                dynamic selectedOrder = ordersDataGrid.SelectedItem;
+                try
+                {
+                    int curr_id = selectedOrder.OrderId;
+                    var editedOrder = ctx.Orders.FirstOrDefault(s => s.OrderId_ == curr_id);
+                    if (editedOrder != null)
+                    {
+                        editedOrder.CustId = Int32.Parse(cmbCustomers.SelectedValue.ToString());
+                        editedOrder.CarId = Convert.ToInt32(cmbInventory.SelectedValue.ToString());
+                        //salvam modificarile 
+                        ctx.SaveChanges();
+                    }
+                }
+                catch (DataException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                BindDataGrid();
+                // pozitionarea pe item-ul curent 
+                customerVSource.View.MoveCurrentTo(selectedOrder);
+            }
+
+            else if (action == ActionState.Delete)
+            {
+                try
+                {
+                    dynamic selectedOrder = ordersDataGrid.SelectedItem;
+                    int curr_id = selectedOrder.OrderId;
+                    var deletedOrder = ctx.Orders.FirstOrDefault(s => s.OrderId_ == curr_id);
+                    if (deletedOrder != null)
+                    {
+                        ctx.Orders.Remove(deletedOrder);
+                        ctx.SaveChanges();
+                        MessageBox.Show("Order Deleted Successfully", "Message");
+                        BindDataGrid();
+                    }
+                }
+                catch (DataException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
         }
 
+
+
+        private void BindDataGrid()
+        {
+            var queryOrder = from ord in ctx.Orders
+                             join cust in ctx.Customers on ord.CustId equals
+                             cust.CustId
+                             join inv in ctx.Inventories on ord.CarId
+                 equals inv.CarId
+                             select new
+                             {
+                                 ord.OrderId_,
+                                 ord.CarId,
+                                 ord.CustId,
+                                 cust.FirstName_,
+                                 cust.LastName,
+                                 inv.Make,
+                                 inv.Color_
+                             };
+            customerOrdersVSource.Source = queryOrder.ToList();
+        }
     }
 }
+
